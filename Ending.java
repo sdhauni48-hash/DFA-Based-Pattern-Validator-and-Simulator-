@@ -1,76 +1,60 @@
 package dfa.ending;
 
+import dfa.exceptions.InvalidCharacterException;
+import dfa.model.Result;
+
 public class Ending {
-    public void DFA(String a, String pattern, String s) {
 
-        String[] arr;
-        arr = a.split(" ");
+    public Result DFA(String a, String pattern, String s) throws InvalidCharacterException {
 
+        StringBuilder table = new StringBuilder();
+
+        String[] arr = a.split(" ");
         int l = pattern.length();
-        int states = l + 1; 
+        int states = l + 1;
 
-        System.out.println("Number of states: " + states);
+        int[][] t = new int[states][arr.length];
 
-        int [][] tran_table = new int [states][arr.length];
-
-        for(int i = 0 ; i < states ; i++){
-            for(int j = 0 ; j < arr.length ; j++){
-
-                if(i == pattern.length()) {
-                    tran_table[i][j] = 0;
-                }
-                else if(arr[j].charAt(0) == pattern.charAt(i)) {
-                    tran_table[i][j] = i + 1;
-                } 
-                else {
-                    tran_table[i][j] = 0;
-                }
+        for (int i = 0; i < states; i++) {
+            for (int j = 0; j < arr.length; j++) {
+                if (i == l) t[i][j] = 0;
+                else if (arr[j].charAt(0) == pattern.charAt(i)) t[i][j] = i + 1;
+                else t[i][j] = 0;
             }
         }
 
-        System.out.println("\nTransition Table:");
+        table.append("State\t");
+        for (String c : arr) table.append(c + "\t");
+        table.append("\n");
 
-        System.out.print("State\t");
-        for(int i = 0; i < arr.length; i++) {
-            System.out.print(arr[i] + "\t");
-        }
-        System.out.println();
+        for (int i = 0; i < states; i++) {
+            if (i == 0) table.append("->q0\t");
+            else if (i == l) table.append("*q" + i + "\t");
+            else table.append("q" + i + "\t");
 
-        for(int i = 0; i < states; i++) {
+            for (int j = 0; j < arr.length; j++)
+                table.append("q" + t[i][j] + "\t");
 
-            if(i == 0)
-                System.out.print("->q" + i + "\t");     
-            else if(i == pattern.length())
-                System.out.print("* q" + i + "\t");    
-            else
-                System.out.print("  q" + i + "\t");    
-
-            for(int j = 0; j < arr.length; j++) {
-                System.out.print("q" + tran_table[i][j] + "\t");
-            }
-
-            System.out.println();
+            table.append("\n");
         }
 
         int p = 0;
 
-        for(int i = 0;i<s.length();i++) {
+        for (int i = 0; i < s.length(); i++) {
             char c = s.charAt(i);
+            int j;
 
-            for(int j=0;j<arr.length;j++) {
-                if(arr[j].charAt(0) == c) {
-                    p = tran_table[p][j];
-                    break;
-                }
-            }
+            for (j = 0; j < arr.length; j++)
+                if (arr[j].charAt(0) == c) break;
+
+            if (j == arr.length)
+                throw new InvalidCharacterException("Invalid character: " + c);
+
+            p = t[p][j];
         }
 
-        System.out.println("\nFinal State: q" + p);
-
-        if(p == pattern.length()) {
-            System.out.println("String Accepted");
-        } else {
-            System.out.println("String Rejected");
-        }
+        return new Result(table.toString(),
+                p == pattern.length(),
+                t, arr, states, pattern.length());
     }
 }
